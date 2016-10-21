@@ -7,10 +7,10 @@ import dagger.Provides;
 import edu.wpi.rail.jrosbridge.Ros;
 
 @Module
-public class RosModule{
+public class D_RosModule{
     Ros mrosBridge;
 
-    ROSModule(Ros rosBridge){
+    D_RosModule(Ros rosBridge){
         mrosBridge = rosBridge;
     }
 
