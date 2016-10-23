@@ -7,5 +7,6 @@ import dagger.Component;
 @Singleton
 @Component(modules = {D_MotorModule.class, D_RosModule.class})
 public interface D_AppComponent {
-    void inject(WiringMotorActivity activity);
+//    void inject(WiringMotorActivity activity);
+    void inject(WiringClass wiringClass);
 }

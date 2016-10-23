@@ -20,19 +20,19 @@ import edu.wpi.rail.jrosbridge.Ros;
  */
 public class MotorItemAdapter extends ArrayAdapter<MotorItem> {
 
-    private static final String                 DEBUG_TAG = "\t\tROBOY_ADAPTER_MOTORIT";
+    private static final String                 DEBUG_TAG = "\t\tRO_ADAPTER_MOTORITEM";
     private static final boolean                DBG = true;
 
-    private ArrayList<MotorItem>                mObjects;
-    private ROSBridge                           mRosBridge;
+    private ArrayList<MotorItem>                mMotorItems;
     private Context                             mContext;
+    private IMotorEvent                       mIMotorEvent;
 
-    public MotorItemAdapter(Context context,int ViewResourceID, ArrayList<MotorItem> objects, ROSBridge ros){
+    public MotorItemAdapter(Context context,int ViewResourceID, ArrayList<MotorItem> objects, IMotorEvent iMotorEvent){
         super(context, ViewResourceID, objects);
         if(DBG) Log.i(DEBUG_TAG,  "Constructor called");
-        this.mObjects = objects;
-        mRosBridge = ros;
+        this.mMotorItems = objects;
         mContext = context;
+        mIMotorEvent = iMotorEvent;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class MotorItemAdapter extends ArrayAdapter<MotorItem> {
             v = inflater.inflate(R.layout.list_motoritem, null);
         }
 
-        final MotorItem motorItem = mObjects.get(index);
+        final MotorItem motorItem = mMotorItems.get(index);
 
         if(null != motorItem){
             final Integer id = new Integer(motorItem.getID());
@@ -51,7 +51,7 @@ public class MotorItemAdapter extends ArrayAdapter<MotorItem> {
 
             final TextView motorName = (TextView) v.findViewById(R.id.textViewMotorID);
             final TextView motorPosition = (TextView) v.findViewById(R.id.textViewCurrentPosition);
-            final SeekBar slider = (SeekBar) v.findViewById(R.id.seekBarPosition);
+            SeekBar slider = (SeekBar) v.findViewById(R.id.seekBarPosition);
 
             if(null != motorName){
                 motorName.setText("Motor ID: " + id.toString());
@@ -75,7 +75,12 @@ public class MotorItemAdapter extends ArrayAdapter<MotorItem> {
                                     + "\t\t from motor: " + id);
                             motorPosition.setText(position_new.toString());
                             motorItem.setmPosition(position_new);
-                            mRosBridge.positionChanged(mObjects);
+                            try {
+                                mIMotorEvent.positionChanged(mMotorItems);
+                            } catch (Exception e) {
+                                if(DBG) Log.e(DEBUG_TAG, e.toString());
+                                //TODO: Handle exception properly
+                            }
                         }
                     }
 

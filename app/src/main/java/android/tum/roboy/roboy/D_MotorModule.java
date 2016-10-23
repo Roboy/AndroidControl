@@ -2,6 +2,7 @@ package android.tum.roboy.roboy;
 
 import android.app.Application;
 import android.content.Context;
+import android.widget.SeekBar;
 
 import java.util.ArrayList;
 
@@ -31,16 +32,15 @@ public class D_MotorModule {
 
     @Provides
     @Singleton
-    ArrayList<MotorItem> providesArrayList(){
-        mMotorList = new ArrayList<MotorItem>();
+    ArrayList<MotorItem> providesArrayListMotorItem(){
+        mMotorList = new ArrayList<>();
         return mMotorList;
-
     }
 
     @Provides
     @Singleton
-    Motors provideMotors(ArrayList<MotorItem> motorList, ROSBridge rosBridge){
-        mMotors = new Motors(motorList, rosBridge);
+    Motors provideMotors(ArrayList<MotorItem> motorList){
+        mMotors = new Motors(motorList);
         return mMotors;
     }
 }

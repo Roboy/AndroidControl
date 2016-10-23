@@ -2,6 +2,7 @@ package android.tum.roboy.roboy;
 
 import android.app.Activity;
 import android.util.Log;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,66 +21,132 @@ import edu.wpi.rail.jrosbridge.callback.ConnectionCallback;
 import edu.wpi.rail.jrosbridge.callback.TopicCallback;
 import edu.wpi.rail.jrosbridge.messages.Message;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
+
 /**
  * Created by sebtut on 21.10.16.
  * API to the ROS Bridge. Manages the ros-connection, sending and receiving of topics
  */
-interface IROS{
+interface IRosBridge{
+
+    void initRos();
+    void addTopic(String topic);
+    void publishTopic(String topic, Message message);
+
+    void setTopicCallback(TopicCallback topicCallback);
+    void setConnectionCallback(ConnectionCallback cCallback);
+
     boolean isConnected();
-    void initRos(final Activity CallingActivity);
-    void setConnectionCallback(ConnectionCallback connectionCallback);
+    String getHostname();
+    int getPort();
 
     //TODO: change library or write wrapper function in oder to change the ROSBridge client during runtime
     /*void setPort(int port);
     void setHostname(String hostname);*/
-    String getHostname();
-    int getPort();
 }
 
-interface IHandlePositionRequest{
-    void positionChanged(ArrayList<MotorItem> ArrayListMotorItems);
-}
+public class ROSBridge implements IRosBridge{
 
-public class ROSBridge implements IROS, IHandlePositionRequest{
-
-    private static final String         DEBUG_TAG = "\t\tROBOY_ROS_WRAPPER";
+    private static final String         DEBUG_TAG = "\t\tRO_ROS_BRIDGE";
     private static final boolean        DBG = true;
-    private static final String         mTestTopic = "EchoBack";
-    private static final ObjectMapper   mObjectMapper = new ObjectMapper();
 
     private ConnectionCallback          mConnectionCallback;
     private Ros                         mRos;
     private HashMap<String,Topic>       mTopicMap;
+    private IRosBridgeEvent             mIWirAct;
+    private RosCallbacks                mRosCallback;
+    private Topic                       mTopic;
+    private TopicCallback               mTopicCallback;
+
+
+    private class RosCallbacks implements ConnectionCallback{
+        @Override
+        public void onOpen(ServerHandshake serverHandshake) {
+            if(DBG) Log.i(DEBUG_TAG, "ROSBridge Connection open : " + mRos.isConnected());
+            ROSBridge.this.mIWirAct.updateConnectState(true);
+        }
+
+        @Override
+        public void onClose(int i, String s, boolean b) {
+            if(DBG) Log.i(DEBUG_TAG, "Disconnected from ROS Server / Websocket");
+        }
+
+        @Override
+        public void onError(Exception e) {
+            System.out.println("on error");
+            e.printStackTrace();
+        }
+    }
+
+    /********************************** CONSTRUCTOR *****************************************/
 
     @Inject
     ROSBridge(Ros ros, HashMap<String, Topic> topicMap){
         if(DBG) Log.v(DEBUG_TAG, "Constructor called");
         mRos = ros;
         mTopicMap = topicMap;
+        mRosCallback = new RosCallbacks();
     }
 
     @Override
-    @Inject
-    public void setConnectionCallback(ConnectionCallback connectionCallback){
-        mConnectionCallback = connectionCallback;
+    public void initRos(){
+        if(null == mRos){
+            throw new IllegalArgumentException(DEBUG_TAG + "initRos: ROS is null");
+        } else if ( null == mRosCallback) {
+            throw new IllegalArgumentException(DEBUG_TAG + "initRos: ConnectionCallback is null");
+        }
+        if(DBG) Log.i(DEBUG_TAG, "Trying to connect....");
+        mRos.connect(mRosCallback);
     }
+
+    @Override
+    public void publishTopic(String topic, Message message){
+        Topic motorPosition = mTopicMap.get(topic);
+        motorPosition.publish(message);
+        if (DBG) Log.i(DEBUG_TAG, "\t\t\t\t publish: " + message.toString());
+    }
+
+    @Override
+    public void addTopic(String topic){
+        mTopic = new Topic(mRos, topic, "std_msgs/String");
+        mTopicMap.put(topic, mTopic);
+        mTopic.subscribe(mTopicCallback);
+        if(DBG) Log.i(DEBUG_TAG, "Added Topic: " + topic);
+    }
+
+    /************************************** SETTER **************************************/
+
+    @Override
+    public void setConnectionCallback(final ConnectionCallback connectionCallback){
+        if(DBG) Log.v(DEBUG_TAG, "Setting Callback for (ROS) connectionCallbacks.");
+        try {
+            mConnectionCallback = connectionCallback;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(connectionCallback.toString()
+                    + " must implement ConnectionCallback interface");
+        }
+    }
+
+    public void setWirActCallback(final IRosBridgeEvent WirAct){
+        if(DBG) Log.v(DEBUG_TAG, "Setting Callback for WiringActivity.");
+        try{
+            mIWirAct = WirAct;
+        }catch(ClassCastException e) {
+            throw new ClassCastException(WirAct.toString()  +"must implmemnt IRosBridgeEvent interface");
+        }
+    }
+
+    @Override
+    public void setTopicCallback(TopicCallback topicCallback){
+        mTopicCallback = topicCallback;
+    }
+
+    /************************************** GETTER **************************************/
 
     @Override
     public boolean isConnected(){
         return mRos.isConnected();
-    }
-
-    @Override
-    public void initRos(final Activity CallingActivity){
-//        Toast.makeText(CallingActivity, "ROS IP: " + mRos.getHostname()
-//                + "\t ROS PORT: " + mRos.getPort() ,
-//                Toast.LENGTH_LONG).show();
-        if(null == mRos){
-            throw new IllegalArgumentException(DEBUG_TAG + "initRos: ROS is null");
-        } else if ( null == mConnectionCallback) {
-            throw new IllegalArgumentException(DEBUG_TAG + "initRos: ConnectionCallback is null");
-        }
-        mRos.connect(mConnectionCallback);
     }
 
     @Override
@@ -93,54 +160,8 @@ public class ROSBridge implements IROS, IHandlePositionRequest{
     @Override
     public String getHostname(){
         if(null == mRos){
-            throw new IllegalArgumentException(DEBUG_TAG + "getPort: ROS is null");
+            throw new IllegalArgumentException(DEBUG_TAG + " getPort: ROS is null");
         }
         return mRos.getHostname();
-    }
-
-    @Override
-    public void positionChanged(ArrayList<MotorItem> ArrayListMotorItems) {
-        if (!mRos.isConnected()) {
-            throw new IllegalArgumentException(DEBUG_TAG + "positionChanged: ROS is not connected");
-        }
-        StringBuilder msgMotorValue = new StringBuilder();
-        msgMotorValue.append("{\"data\": \"");
-        String delim = "";
-        for (MotorItem mi : ArrayListMotorItems) {
-            msgMotorValue.append(delim + mi.getPosition());
-            delim = ", ";
-        }
-        msgMotorValue.append("\"}");
-        Topic motorPosition = mTopicMap.get(mTestTopic);
-        Message motorValues = new Message(msgMotorValue.toString());
-        motorPosition.publish(motorValues);
-
-        if (DBG) Log.i(DEBUG_TAG, "\t\t\t publish: " + msgMotorValue.toString());
-    }
-
-    public void initConnectionCallback(final Motors motors){
-        mConnectionCallback = new ConnectionCallback() {
-            public void onOpen(ServerHandshake serverHandshake) {
-                if(DBG) Log.i(DEBUG_TAG, "ROSBridge Connection open : " + mRos.isConnected());
-                final Topic topic = new Topic(mRos, mTestTopic, "std_msgs/String");
-                mTopicMap.put(mTestTopic, topic);
-                topic.subscribe(new TopicCallback() {
-                    public void handleMessage(Message message) {
-                        if(DBG) Log.i(DEBUG_TAG, "\t\t\treceived message: " + message.toString());
-                        motors.handleMessage(message, topic);
-                    }
-                });
-            }
-
-            public void onClose(int i, String s, boolean b) {
-
-                System.out.println("on close");
-            }
-
-            public void onError(Exception e) {
-                System.out.println("on error");
-                e.printStackTrace();
-            }
-        };
     }
 }

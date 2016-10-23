@@ -2,6 +2,7 @@ package android.tum.roboy.roboy;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.SeekBar;
 
 import junit.framework.Assert;
 
@@ -15,50 +16,47 @@ import edu.wpi.rail.jrosbridge.messages.Message;
 
 /**
  * Created by sebtut on 21.10.16.
- * Wrapper class to provide an defined API the motors (MotorItemAdapter + MotorItem)
+ * Wrapper class to provide an defined API to the motors (MotorItemAdapter + MotorItem)
  * of Roboy
  */
 interface IMotors{
     void addMotor(int id, int position);
-    void initAdapter(Context context, int ViewResourceID);
+    void initAdapter(Context context, int ViewResourceID, IMotorEvent iMotorEvent);
     void setContext(Context context);
     MotorItemAdapter getAdapter();
 }
 
 interface IMessageRequest{
-    void handleMessage(Message message, Topic topic);
+    void handleMsgMotorValues(Message message);
 }
 
 public class Motors implements IMotors, IMessageRequest{
-    private static final String DEBUG_TAG = "\t\tROBOY_MOTOR_WRAPPER";
-    private static final boolean DBG = true;
+    private static final String             DEBUG_TAG = "\t\tRO_MOTOR_WRAPPER";
+    private static final boolean            DBG = true;
 
-    private ArrayList<MotorItem> mMotorItems;
-    private Context mContext;
-    private MotorItemAdapter mMotorItemAdapter;
-    private ROSBridge mRosBridge;
+    private ArrayList<MotorItem>            mMotorItems;
+    private Context                         mContext;
+    private MotorItemAdapter                mMotorItemAdapter;
+    private IMotorEvent                     mIWirMotors;
 
+    /***********************************  CONSTRUCTORS *************************************/
 
     @Inject
-    Motors(ArrayList<MotorItem> motorItems, ROSBridge rosBridge){
+    Motors(ArrayList<MotorItem> motorItems){
         if(DBG) Log.v(DEBUG_TAG, "Constructor called");
         mMotorItems = motorItems;
-        mRosBridge = rosBridge;
     }
 
+    /***********************************  MOTORS INTERFACE (IMotors) *************************************/
+
     @Override
-    public void initAdapter(Context context, int ViewResourceID){
+    public void initAdapter(Context context, int ViewResourceID, IMotorEvent iMotorEvent){
         if(null == context){
             throw new IllegalArgumentException(DEBUG_TAG + "setAdapter: context is null");
         }
         setContext(context);
-        mMotorItemAdapter = new MotorItemAdapter(mContext, ViewResourceID, mMotorItems, mRosBridge);
-    }
-
-    @Override
-    public void handleMessage(Message message, Topic topic){
-        if(DBG) Log.i(DEBUG_TAG, "\t\treceived message: " + message.toString()
-                + " from topic: " + topic);
+        mIWirMotors = iMotorEvent;
+        mMotorItemAdapter = new MotorItemAdapter(mContext, ViewResourceID, mMotorItems, mIWirMotors);
     }
 
     @Override
@@ -83,4 +81,10 @@ public class Motors implements IMotors, IMessageRequest{
         return mMotorItemAdapter;
     }
 
+    /***********************************  RECEIVING MESSAGE INTERFACE *************************************/
+
+    @Override
+    public void handleMsgMotorValues(Message message){
+        if(DBG) Log.i(DEBUG_TAG, "\t\t\treceived message: " + message.toString());
+    }
 }
