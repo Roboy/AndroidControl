@@ -11,18 +11,28 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import edu.wpi.rail.jrosbridge.Ros;
+
 /**
  * Created by sebtut on 12.09.16.
+ * Adapter, which provides the MotorItems of Roboy to the ListView in the UI
+ *
  */
 public class MotorItemAdapter extends ArrayAdapter<MotorItem> {
 
-    private ArrayList<MotorItem> mObjects;
-    private static final String DEBUG_TAG = "MOTORITEM_ADAPTER";
-    private static final boolean DBG = true;
+    private static final String                 DEBUG_TAG = "\t\tROBOY_ADAPTER_MOTORIT";
+    private static final boolean                DBG = true;
 
-    public MotorItemAdapter(Context context,int ViewResourceID, ArrayList<MotorItem> objects){
+    private ArrayList<MotorItem>                mObjects;
+    private ROSBridge                           mRosBridge;
+    private Context                             mContext;
+
+    public MotorItemAdapter(Context context,int ViewResourceID, ArrayList<MotorItem> objects, ROSBridge ros){
         super(context, ViewResourceID, objects);
+        if(DBG) Log.i(DEBUG_TAG,  "Constructor called");
         this.mObjects = objects;
+        mRosBridge = ros;
+        mContext = context;
     }
 
     @Override
@@ -33,31 +43,40 @@ public class MotorItemAdapter extends ArrayAdapter<MotorItem> {
             v = inflater.inflate(R.layout.list_motoritem, null);
         }
 
-        MotorItem i = mObjects.get(index);
-        if(i != null){
+        final MotorItem motorItem = mObjects.get(index);
+
+        if(null != motorItem){
+            final Integer id = new Integer(motorItem.getID());
+            final Integer position = new Integer(motorItem.getPosition());
+
             final TextView motorName = (TextView) v.findViewById(R.id.textViewMotorID);
             final TextView motorPosition = (TextView) v.findViewById(R.id.textViewCurrentPosition);
-            SeekBar slider = (SeekBar) v.findViewById(R.id.seekBarPosition);
+            final SeekBar slider = (SeekBar) v.findViewById(R.id.seekBarPosition);
 
             if(null != motorName){
-                Integer id = new Integer(i.getID());
-                motorName .setText("Motor ID: " + id.toString());
+                motorName.setText("Motor ID: " + id.toString());
             }
 
             if(null != motorPosition){
-                Integer position = new Integer(i.getPosition());
                 motorPosition.setText(position.toString());
             }
 
             if(null != slider){
-                Integer position = new Integer(i.getPosition());
-                slider.setProgress(position);
+                slider.setMax(200);
+                slider.setProgress(100);
                 slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        Integer position = new Integer(progress);
-                        motorPosition.setText(position.toString());
-                        // TODO: send new values via the rosbridge
+                        if(fromUser) {
+                            Integer position_new = new Integer(progress);
+                            position_new -= 100;
+                            if (DBG) Log.i(DEBUG_TAG, " \t\t new position: " + position_new
+                                    + "\t\t old position:" + position
+                                    + "\t\t from motor: " + id);
+                            motorPosition.setText(position_new.toString());
+                            motorItem.setmPosition(position_new);
+                            mRosBridge.positionChanged(mObjects);
+                        }
                     }
 
                     @Override

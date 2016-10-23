@@ -5,7 +5,7 @@ import javax.inject.Singleton;
 import dagger.Component;
 
 @Singleton
-@Component(modules = {MotorModule.class, RosModule.class})
+@Component(modules = {D_MotorModule.class, D_RosModule.class})
 public interface D_AppComponent {
-    void inject(WiringMotorAcitivity activity);
+    void inject(WiringMotorActivity activity);
 }

@@ -18,9 +18,10 @@ import dagger.Provides;
 @Module
 public class D_MotorModule {
 
-    ArrayList<MotorItem> mMotors;
+    ArrayList<MotorItem> mMotorList;
+    Motors mMotors;
 
-    MotorModule(){
+    D_MotorModule(){
     }
 
     @Provides
@@ -31,9 +32,16 @@ public class D_MotorModule {
     @Provides
     @Singleton
     ArrayList<MotorItem> providesArrayList(){
-        mMotors = new ArrayList<MotorItem>();
-        return mMotors;
+        mMotorList = new ArrayList<MotorItem>();
+        return mMotorList;
 
+    }
+
+    @Provides
+    @Singleton
+    Motors provideMotors(ArrayList<MotorItem> motorList, ROSBridge rosBridge){
+        mMotors = new Motors(motorList, rosBridge);
+        return mMotors;
     }
 }
 

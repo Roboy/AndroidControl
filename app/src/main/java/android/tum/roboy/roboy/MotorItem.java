@@ -4,12 +4,14 @@ import android.util.Log;
 
 /**
  * Created by sebtut on 12.09.16.
+ * Each MotorItem should respectively represent one of many Motors from the Roboy-corpus
+ * Used together
  */
 public class MotorItem {
     private int mID;
     private int mPosition;
 
-    private static final String DEBUG_TAG = "ROBOY_MOTORITEM";
+    private static final String DEBUG_TAG = "\t\tROBOY_MOTORITEM";
     private static final boolean DBG = true;
 
     public MotorItem() {
@@ -26,7 +28,6 @@ public class MotorItem {
     public void setID(int id) {
         this.mID = id;
     }
-
     public void setmPosition(int position) {
         this.mPosition = position;
     }
@@ -36,7 +37,6 @@ public class MotorItem {
     public int getID() {
         return this.mID;
     }
-
     public int getPosition() {
         return this.mPosition;
     }

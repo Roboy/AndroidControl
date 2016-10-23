@@ -1,6 +1,7 @@
 package android.tum.roboy.roboy;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +17,6 @@ import org.java_websocket.handshake.ServerHandshake;
 import java.util.ArrayList;
 import javax.inject.Inject;
 
-import edu.wpi.rail.jrosbridge.Ros;
 import edu.wpi.rail.jrosbridge.Topic;
 import edu.wpi.rail.jrosbridge.callback.ConnectionCallback;
 import edu.wpi.rail.jrosbridge.callback.TopicCallback;
@@ -24,38 +24,39 @@ import edu.wpi.rail.jrosbridge.messages.Message;
 
 /**
  *  Instantiates the ROSbridge which is used to retrieve and send values to the ROS Master node
- *  via a defined Websocket protocol. To update and display different motors the Activitiy
- *  creates the a ListView with and the underlying Adapter, which provides the data for each Motor
- *  It thus is the first place / activity wiring the ROSbridge, Motors and the UserInterface providing
+ *  via a defined Websocket protocol. The public Interface to ROS is defined via the ROSBridge class.
+ *  To update and display different motors the Activitiy creates the a ListView which is filled with
+ *  the data provided through the Motors class. The Motors class provides a public Interface to the Roboy
+ *  Motors.
+ *  The WiringMotor-Activity thus is the first place / activity gatering the ROSbridge , the Motors and the UserInterface providing
  *  further actions.
  */
-public class WiringMotorAcitivity extends AppCompatActivity{
+public class WiringMotorActivity extends AppCompatActivity{
 
-    private static final String DEBUG_TAG = "ROBOY_WIRING_MOTORS";
-    private static final boolean DBG = true;
-    private ListView listView;
+    private static final String     DEBUG_TAG = "\t\tROBOY_WIRING_MOTORS";
+    private static final boolean    DBG = true;
+    private ListView                listView;
 
-    private MotorItemAdapter mMotorItemAdapter;
-    @Inject ArrayList<MotorItem> mMotorItems;
-    @Inject Ros mrosBridge;
+    @Inject ROSBridge               mRosBridge;
+    @Inject Motors                  mMotors;
 
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        if(DBG) Log.i(DEBUG_TAG, "Constructor called");
+        if(DBG) Log.i(DEBUG_TAG, "onCreate called");
+
         super.onCreate(savedInstanceState);
-        // inject the instances with DI framework
         ((RoboyApp) getApplication()).getNetComponent().inject(this);
 
         setupToolbar();
         setupWindowAnimations();
         setupROS();
-        setupMotors();
+        initMotors();
 
         setContentView(R.layout.activity_chillout_lobby);
         listView = (ListView) findViewById(R.id.ListView_Motors);
-        listView.setAdapter(mMotorItemAdapter);
+        listView.setAdapter(mMotors.getAdapter());
 
         Button addMotorButton = (Button) findViewById(R.id.Button_ScanMotors);
         addMotorButton.setOnClickListener(new View.OnClickListener() {
@@ -67,40 +68,24 @@ public class WiringMotorAcitivity extends AppCompatActivity{
         });
     }
 
-    private void setupMotors() {
-        if(DBG) Log.i(DEBUG_TAG, "Setting up motors");
+    private void initMotors() {
+        if(DBG) Log.i(DEBUG_TAG, "Init Motors");
         //TODO: Get MotorItems via the rosbridge
-        mMotorItems.add(new MotorItem(0, 20));
-        mMotorItems.add(new MotorItem(1, 50));
-        mMotorItems.add(new MotorItem(2, 80));
-        mMotorItemAdapter = new MotorItemAdapter(this , R.layout.list_motoritem, mMotorItems);
+        mMotors.initAdapter(this, R.layout.list_motoritem);
+        for(int i = 0 ; i < 16; ++i){
+            mMotors.addMotor(i, 0);
+        }
     }
 
     private void setupROS() {
-        if(DBG) Log.i(DEBUG_TAG, "Setting up ROS");
-        mrosBridge.connect(new ConnectionCallback() {
-            public void onOpen(ServerHandshake serverHandshake) {
-                Topic topic = new Topic(mrosBridge, "/echo_back", "std_msgs/String");
-                topic.subscribe(new TopicCallback() {
-                    public void handleMessage(Message message) {
-                        System.out.println(message);
-                        if(DBG) Log.i(DEBUG_TAG, "MESSAGE RECEIVED: " + message.toString());
-                    }
-                });
-                Message toSend= new Message("{\"data\": \"hello, world!\"}");
-                topic.publish(toSend);
-                if(DBG) Log.i(DEBUG_TAG, "Connection open");
-            }
+        mRosBridge.initConnectionCallback(mMotors);
+        mRosBridge.initRos(this);
+        if(mRosBridge.isConnected()){
+            if(DBG) Log.i(DEBUG_TAG, "Connected to ROS Master");
+        } else {
+            if(DBG) Log.i(DEBUG_TAG, "No valid ROS Master");
+        }
 
-            public void onClose(int i, String s, boolean b) {
-                System.out.println("on close");
-            }
-
-            public void onError(Exception e) {
-                System.out.println("on error");
-                e.printStackTrace();
-            }
-        });
     }
 
     private void setupToolbar(){

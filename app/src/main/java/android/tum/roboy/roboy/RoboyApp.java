@@ -15,7 +15,7 @@ public class RoboyApp extends Application {
 
         mAppComponent = DaggerD_AppComponent.builder()
                 .d_MotorModule(new D_MotorModule())
-                .d_RosModule(new D_RosModule(new Ros("10.177.254.221", 9090)))
+                .d_RosModule(new D_RosModule(new Ros("10.177.254.46", 9090)))
                 .build();
     }
 
