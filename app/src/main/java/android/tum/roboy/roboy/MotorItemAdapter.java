@@ -62,14 +62,14 @@ public class MotorItemAdapter extends ArrayAdapter<MotorItem> {
             }
 
             if(null != slider){
-                slider.setMax(200);
-                slider.setProgress(100);
+                slider.setMax(50);
+                slider.setProgress(0);
                 slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                         if(fromUser) {
                             Integer position_new = new Integer(progress);
-                            position_new -= 100;
+//                            position_new -= 100;
                             if (DBG) Log.i(DEBUG_TAG, " \t\t new position: " + position_new
                                     + "\t\t old position:" + position
                                     + "\t\t from motor: " + id);

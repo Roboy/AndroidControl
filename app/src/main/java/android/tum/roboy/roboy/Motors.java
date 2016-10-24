@@ -1,17 +1,13 @@
 package android.tum.roboy.roboy;
 
 import android.content.Context;
+import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.widget.SeekBar;
-
-import junit.framework.Assert;
 
 import java.util.ArrayList;
 
 import javax.inject.Inject;
 
-import edu.wpi.rail.jrosbridge.Ros;
-import edu.wpi.rail.jrosbridge.Topic;
 import edu.wpi.rail.jrosbridge.messages.Message;
 
 /**
@@ -21,7 +17,7 @@ import edu.wpi.rail.jrosbridge.messages.Message;
  */
 interface IMotors{
     void addMotor(int id, int position);
-    void initAdapter(Context context, int ViewResourceID, IMotorEvent iMotorEvent);
+    void initAdapter(Context context, int ViewResourceID, Fragment frag);
     void setContext(Context context);
     MotorItemAdapter getAdapter();
 }
@@ -50,12 +46,16 @@ public class Motors implements IMotors, IMessageRequest{
     /***********************************  MOTORS INTERFACE (IMotors) *************************************/
 
     @Override
-    public void initAdapter(Context context, int ViewResourceID, IMotorEvent iMotorEvent){
+    public void initAdapter(Context context, int ViewResourceID, Fragment frag){
         if(null == context){
             throw new IllegalArgumentException(DEBUG_TAG + "setAdapter: context is null");
         }
         setContext(context);
-        mIWirMotors = iMotorEvent;
+        try{
+            mIWirMotors = (IMotorEvent) frag;
+        }catch (ClassCastException e){
+            throw new ClassCastException(DEBUG_TAG + frag.toString() + "must implement the IMotorEvent Interface!");
+        }
         mMotorItemAdapter = new MotorItemAdapter(mContext, ViewResourceID, mMotorItems, mIWirMotors);
     }
 

@@ -1,15 +1,13 @@
 package android.tum.roboy.roboy;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ListView;
-
-import javax.inject.Inject;
 
 
 interface IWiringEvent{
@@ -30,45 +28,30 @@ public class WiringMotorActivity extends AppCompatActivity implements IWiringEve
     private static final String         DEBUG_TAG = "\t\tRO_WIRING_ACTIVITY";
     private static final boolean        DBG = true;
 
-    private WiringClass                 mWiringClass;
-    public ListView                     mLVMotors;
+    private WiringFragment              mSliders;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(DBG) Log.i(DEBUG_TAG, "onCreate called");
+        setContentView(R.layout.fmotors);
 
-
-        mWiringClass = new WiringClass(this);
-        mWiringClass.setupMotors(this);
-
-        setContentView(R.layout.activity_chillout_lobby);
-        mLVMotors = new ListView(this);
-        mLVMotors = (ListView) findViewById(R.id.ListView_Motors);
-        mLVMotors.setAdapter(mWiringClass.getAdapter());
-        mLVMotors.setVisibility(View.INVISIBLE);
-
-        mWiringClass.setupROS();
-
-
-//        Button addMotorButton = (Button) findViewById(R.id.Button_ScanMotors);
-//        addMotorButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if(DBG) Log.i(DEBUG_TAG, "Adding a motor via QR-Scanner");
-//                //startActivity(intent);
-//            }
-//        });
+        mSliders = new WiringFragment();
+        android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
+        android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, mSliders);
+        fragmentTransaction.commit();
     }
 
     @Override
     public void wiringDone(Context context){
         if(DBG) Log.i(DEBUG_TAG, "Wiring done!");
+
         Handler mainHandler = new Handler(context.getMainLooper());
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-//                mLVMotors.setVisibility(View.VISIBLE);
+                mSliders.toggleVisibilityAdapter(true);
             }
         });
 

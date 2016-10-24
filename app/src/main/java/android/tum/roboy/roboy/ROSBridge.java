@@ -1,17 +1,11 @@
 package android.tum.roboy.roboy;
 
-import android.app.Activity;
+import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.widget.ListView;
-import android.widget.Toast;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.java_websocket.handshake.ServerHandshake;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -20,9 +14,6 @@ import edu.wpi.rail.jrosbridge.Topic;
 import edu.wpi.rail.jrosbridge.callback.ConnectionCallback;
 import edu.wpi.rail.jrosbridge.callback.TopicCallback;
 import edu.wpi.rail.jrosbridge.messages.Message;
-
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
 
 /**
  * Created by sebtut on 21.10.16.
@@ -128,12 +119,12 @@ public class ROSBridge implements IRosBridge{
         }
     }
 
-    public void setWirActCallback(final IRosBridgeEvent WirAct){
+    public void setWirActCallback(final Fragment frag){
         if(DBG) Log.v(DEBUG_TAG, "Setting Callback for WiringActivity.");
         try{
-            mIWirAct = WirAct;
+            mIWirAct = (IRosBridgeEvent) frag;
         }catch(ClassCastException e) {
-            throw new ClassCastException(WirAct.toString()  +"must implmemnt IRosBridgeEvent interface");
+            throw new ClassCastException(frag.toString()  +"must implmemnt IRosBridgeEvent interface");
         }
     }
 

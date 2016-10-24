@@ -8,5 +8,5 @@ import dagger.Component;
 @Component(modules = {D_MotorModule.class, D_RosModule.class})
 public interface D_AppComponent {
 //    void inject(WiringMotorActivity activity);
-    void inject(WiringClass wiringClass);
+    void inject(WiringFragment WiringFragment);
 }
