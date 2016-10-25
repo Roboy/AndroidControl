@@ -2,12 +2,14 @@ package android.tum.roboy.roboy;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -32,15 +34,15 @@ interface IMotorEvent {
  */
 public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorEvent {
 
-    private static final String         DEBUG_TAG = "\t\tRO_WIRING_CLASS";
+    private static final String         DEBUG_TAG = "\t\tRO_WIRING_FRAGMENT";
     private static final boolean        DBG = true;
     private static final String         mTestTopic = "roboy/motor_cmd";
 
     private boolean                     m1Topic = false;
-    private IWiringEvent                mIWiringEvent;
+    private IWiringEvent_Slider         mIWir_Slider;
     private Context                     mContext;
     private Activity                    mCallingActivity;
-    public ListView                    mLVMotors;
+    public ListView                     mLVMotors;
     private View                        mRootView;
 
 
@@ -59,7 +61,7 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
         ((RoboyApp) mCallingActivity.getApplication()).getNetComponent().inject(this);
 
         try{
-            mIWiringEvent = (IWiringEvent) context;
+            mIWir_Slider = (IWiringEvent_Slider) context;
         }catch (ClassCastException e){
             throw new ClassCastException(context.toString()
                     + " must implement OnHeadlineSelectedListener");
@@ -82,6 +84,14 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
         mLVMotors = (ListView) mRootView.findViewById(R.id.ListView_Motors);
         mLVMotors.setAdapter(getAdapter());
         mLVMotors.setVisibility(View.INVISIBLE);
+
+        Button startQrScanner = (Button) mRootView.findViewById(R.id.Button_ScanMotors);
+        startQrScanner.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mIWir_Slider.setQRFragment(mContext);
+            }
+        });
         setupROS();
     }
 
@@ -164,7 +174,7 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
             m1Topic = true;
             if(DBG) Log.i(DEBUG_TAG, "Rosbridge is able to subscribe topics. Subscribe to: " + mTestTopic);
             mRosBridge.addTopic(mTestTopic);
-            mIWiringEvent.wiringDone(mContext);
+            mIWir_Slider.wiringDone(mContext);
         }
     }
 

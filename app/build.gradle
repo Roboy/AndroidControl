@@ -35,4 +35,6 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.7.3'
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.3'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.7.3'
+    /* QR Reader*/
+    compile 'com.dlazaro66.qrcodereaderview:qrcodereaderview:2.0.1'
 }

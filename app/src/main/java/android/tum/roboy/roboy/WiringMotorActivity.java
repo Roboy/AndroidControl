@@ -10,8 +10,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 
-interface IWiringEvent{
+interface IWiringEvent_Slider{
     void wiringDone(Context context);
+    void setQRFragment(Context context);
+}
+
+interface IWiringEvent_QR{
+    void motorDetected(int id);
 }
 
 /**
@@ -23,12 +28,13 @@ interface IWiringEvent{
  *  The WiringMotor-Activity thus is the first place / activity gathering the ROSbridge , the Motors and the UserInterface providing
  *  a central controlling unit.
  */
-public class WiringMotorActivity extends AppCompatActivity implements IWiringEvent{
+public class WiringMotorActivity extends AppCompatActivity implements IWiringEvent_Slider, IWiringEvent_QR{
 
     private static final String         DEBUG_TAG = "\t\tRO_WIRING_ACTIVITY";
     private static final boolean        DBG = true;
 
     private WiringFragment              mSliders;
+    private QRScannerFragment           mQRScanner;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,5 +61,27 @@ public class WiringMotorActivity extends AppCompatActivity implements IWiringEve
             }
         });
 
+    }
+
+    @Override
+    public void setQRFragment(Context context){
+        if(DBG) Log.i(DEBUG_TAG, "Setting the QR Scanner fragment");
+
+        Handler mainHandler = new Handler(context.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mQRScanner = new QRScannerFragment();
+                android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
+                android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.replace(R.id.fragment_container, mQRScanner);
+                fragmentTransaction.commit();
+            }
+        });
+    }
+
+    @Override
+    public void motorDetected(int id){
+        if(DBG) Log.i(DEBUG_TAG, "New Motor detected (QR CODE SCANNED!");
     }
 }
