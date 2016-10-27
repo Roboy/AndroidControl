@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">Roboy</string>
+    <string name="app_name">RoboyControl</string>
+    <string name="action_emergency">Emergency</string>
+    <string name="action_position">Position</string>
+    <string name="action_force">Force</string>
+    <string name="action_velocity">Velocity</string>
 </resources>

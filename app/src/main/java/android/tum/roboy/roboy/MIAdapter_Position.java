@@ -11,23 +11,23 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import edu.wpi.rail.jrosbridge.Ros;
-
 /**
  * Created by sebtut on 12.09.16.
  * Adapter, which provides the MotorItems of Roboy to the ListView in the UI
  *
  */
-public class MotorItemAdapter extends ArrayAdapter<MotorItem> {
+public class MIAdapter_Position extends ArrayAdapter<MotorItem> {
 
     private static final String                 DEBUG_TAG = "\t\tRO_ADAPTER_MOTORITEM";
     private static final boolean                DBG = true;
+    private static final Integer                Offset = 50;
+    private static final Integer                Max = 2 * 50; // -50 to +50
 
     private ArrayList<MotorItem>                mMotorItems;
     private Context                             mContext;
     private IMotorEvent                         mIMotorEvent;
 
-    public MotorItemAdapter(Context context,int ViewResourceID, ArrayList<MotorItem> objects, IMotorEvent iMotorEvent){
+    public MIAdapter_Position(Context context, int ViewResourceID, ArrayList<MotorItem> objects, IMotorEvent iMotorEvent){
         super(context, ViewResourceID, objects);
         if(DBG) Log.i(DEBUG_TAG,  "Constructor called");
         this.mMotorItems = objects;
@@ -58,20 +58,21 @@ public class MotorItemAdapter extends ArrayAdapter<MotorItem> {
             }
 
             if(null != motorPosition){
-                motorPosition.setText(position.toString());
+                motorPosition.setText(new Integer(0).toString());
             }
 
             if(null != slider){
-                slider.setMax(50);
-                slider.setProgress(motorItem.getPosition());
+                slider.setMax(Max);
+                slider.setProgress(Offset);
                 slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        Integer position_new = new Integer(progress);
+                        position_new -= Offset;
+                        motorPosition.setText(position_new.toString());
+                        motorItem.setmPosition(position_new);
+
                         if(fromUser) {
-                            Integer position_new = new Integer(progress);
-//                            position_new -= 100;
-                            motorPosition.setText(position_new.toString());
-                            motorItem.setmPosition(position_new);
                             try {
                                 mIMotorEvent.positionChanged(motorItem);
                             } catch (Exception e) {

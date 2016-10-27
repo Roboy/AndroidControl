@@ -93,6 +93,9 @@ public class ROSBridge implements IRosBridge{
 
     @Override
     public void publishTopic(String topic, Message message){
+        if(!mTopicMap.containsKey(topic)){
+            addTopic(topic);
+        }
         Topic motorPosition = mTopicMap.get(topic);
         motorPosition.publish(message);
         if (DBG) Log.i(DEBUG_TAG, "\t\t\t\t publish: " + message.toString());
@@ -100,7 +103,8 @@ public class ROSBridge implements IRosBridge{
 
     @Override
     public void addTopic(String topic){
-        mTopic = new Topic(mRos, topic, "std_msgs/String");
+//        mTopic = new Topic(mRos, topic, "std_msgs/String");
+        mTopic = new Topic(mRos, topic, "common_utilities/MotorCommand");
         mTopicMap.put(topic, mTopic);
         mTopic.subscribe(mTopicCallback);
         if(DBG) Log.i(DEBUG_TAG, "Added Topic: " + topic);

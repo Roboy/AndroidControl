@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- "Mark Favorite", should appear as action button if possible -->
+    <item
+        android:id="@+id/action_emergency"
+        android:icon="@drawable/ic_flash_on_white_48dp"
+        android:title="@string/action_emergency"
+        app:showAsAction="ifRoom"/>
+
+    <item android:id="@+id/Position"
+        android:title="@string/action_position"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/Force"
+        android:title="@string/action_force"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/Velocity"
+        android:title="@string/action_velocity"
+        app:showAsAction="never"/>
+
+</menu>

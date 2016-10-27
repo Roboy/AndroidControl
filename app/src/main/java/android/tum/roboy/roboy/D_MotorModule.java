@@ -38,7 +38,6 @@ public class D_MotorModule {
     }
 
     @Provides
-    @Singleton
     Motors provideMotors(ArrayList<MotorItem> motorList){
         mMotors = new Motors(motorList);
         return mMotors;

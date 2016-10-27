@@ -3,5 +3,5 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="toolbar_primary">#039BE5</color>
+    <color name="slider_toolbar">#FF3F51B4</color>
 </resources>

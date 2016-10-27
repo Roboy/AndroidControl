@@ -1,13 +1,12 @@
 package android.tum.roboy.roboy;
 
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
 
 interface IWiringEvent_Slider{
@@ -64,8 +63,8 @@ public class WiringMotorActivity extends AppCompatActivity implements IWiringEve
     }
 
     @Override
-    public void setQRFragment(Context context){
-        if(DBG) Log.i(DEBUG_TAG, "Setting the QR Scanner fragment");
+    public void setQRFragment(Context context) {
+        if (DBG) Log.i(DEBUG_TAG, "Setting the QR Scanner fragment");
 
         Handler mainHandler = new Handler(context.getMainLooper());
         mainHandler.post(new Runnable() {
@@ -75,6 +74,7 @@ public class WiringMotorActivity extends AppCompatActivity implements IWiringEve
                 android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
                 android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 fragmentTransaction.replace(R.id.fragment_container, mQRScanner);
+                fragmentTransaction.addToBackStack(null);
                 fragmentTransaction.commit();
             }
         });
@@ -83,5 +83,46 @@ public class WiringMotorActivity extends AppCompatActivity implements IWiringEve
     @Override
     public void motorDetected(int id){
         if(DBG) Log.i(DEBUG_TAG, "New Motor detected (QR CODE SCANNED!");
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_emergency:
+                if(DBG) Log.i(DEBUG_TAG, "item id:" +  item.toString());
+                if(DBG) Log.i(DEBUG_TAG, "Emergency detected!");
+                return true;
+
+            case R.id.Position:
+                if(DBG) Log.i(DEBUG_TAG, "item id:" +  item.toString());
+                if(DBG) Log.i(DEBUG_TAG, "Position detected!");
+                mSliders.setAdapter(Motors.MotorAdapter.POSITION);
+                mSliders.setToolbarTitle("POSITION");
+                return true;
+
+            case R.id.Force:
+                if(DBG) Log.i(DEBUG_TAG, "item id:" +  item.toString());
+                if(DBG) Log.i(DEBUG_TAG, "Velocity detected!");
+                mSliders.setAdapter(Motors.MotorAdapter.FORCE);
+                mSliders.setToolbarTitle("FORCE");
+                return true;
+
+            case R.id.Velocity:
+                if(DBG) Log.i(DEBUG_TAG, "item id:" +  item.toString());
+                if(DBG) Log.i(DEBUG_TAG, "Force detected!");
+                mSliders.setAdapter(Motors.MotorAdapter.VELOCITY);
+                mSliders.setToolbarTitle("VELOCITY");
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.slidercontrol_menu, menu);
+        return  true;
     }
 }

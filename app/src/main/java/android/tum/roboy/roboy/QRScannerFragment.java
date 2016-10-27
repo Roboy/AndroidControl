@@ -15,6 +15,8 @@ import android.widget.TextView;
 
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;
 
+import org.w3c.dom.Text;
+
 /**
  * Created by sebtut on 25.10.16.
  */
@@ -77,10 +79,10 @@ public class QRScannerFragment extends Fragment implements QRCodeReaderView.OnQR
         mydecoderview.setTorchEnabled(true);
 
         // Use this function to set front camera preview
-//        mydecoderview.setFrontCamera();
+        mydecoderview.setFrontCamera();
 
         // Use this function to set back camera preview
-        mydecoderview.setBackCamera();
+//        mydecoderview.setBackCamera();
     }
 
     // Called when a QR is decoded
@@ -89,6 +91,8 @@ public class QRScannerFragment extends Fragment implements QRCodeReaderView.OnQR
     @Override
     public void onQRCodeRead(String text, PointF[] points) {
 //        resultTextView.setText(text);
+        TextView contentProvier = (TextView) mRootView.findViewById(R.id.QRContent);
+        contentProvier.setText(text);
         if(DBG)Log.i(DEBUG_TAG, "Detected QR String: " + text);
         mIWir_QR.motorDetected(0);
     }

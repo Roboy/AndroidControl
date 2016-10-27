@@ -1,16 +1,20 @@
 package android.tum.roboy.roboy;
 
-import android.app.Activity;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 
@@ -25,7 +29,9 @@ interface IRosBridgeEvent{
 }
 
 interface IMotorEvent {
-    void positionChanged(ArrayList<MotorItem> ArrayListMotorItems);
+    void positionChanged(MotorItem motorItem);
+    void velocityChanged(MotorItem motorItem);
+    void forceChanged(MotorItem motorItem);
 }
 
 
@@ -36,14 +42,17 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
 
     private static final String         DEBUG_TAG = "\t\tRO_WIRING_FRAGMENT";
     private static final boolean        DBG = true;
-    private static final String         mTestTopic = "roboy/motor_cmd";
+    private static final String         mVeloctiyT = "/roboy/motor_cmd_vel";
+    private static final String         mForceT = "/roboy/motor_cmd_pos";
+    private static final String         mpositionT = "/roboy/motor_cmd_force";
 
     private boolean                     m1Topic = false;
     private IWiringEvent_Slider         mIWir_Slider;
     private Context                     mContext;
-    private Activity                    mCallingActivity;
+    private AppCompatActivity           mCallingActivity;
     public ListView                     mLVMotors;
     private View                        mRootView;
+    private Toolbar                     mToolbar;
 
 
     @Inject ROSBridge                   mRosBridge;
@@ -56,7 +65,14 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mCallingActivity = getActivity();
+
+        try{
+            mCallingActivity = (AppCompatActivity) context;
+        }catch (ClassCastException e){
+            throw new ClassCastException(context.toString()
+                    + " must be an AppCompatActivity");
+        }
+
         mContext = context;
         ((RoboyApp) mCallingActivity.getApplication()).getNetComponent().inject(this);
 
@@ -70,7 +86,6 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance){
-
         mRootView = inflater.inflate(R.layout.motorslidersfragment, container, false);
         return mRootView;
     }
@@ -80,10 +95,13 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
         super.onActivityCreated(savedInstance);
 
         setupMotors();
-        mLVMotors = new ListView(mContext);
         mLVMotors = (ListView) mRootView.findViewById(R.id.ListView_Motors);
-        mLVMotors.setAdapter(getAdapter());
+        setAdapter(Motors.MotorAdapter.POSITION);
         mLVMotors.setVisibility(View.INVISIBLE);
+
+        mToolbar =  (Toolbar) mRootView.findViewById(R.id.MotorSlider_toolbar);
+        this.setToolbarTitle("POSITION");
+        mCallingActivity.setSupportActionBar(mToolbar);
 
         Button startQrScanner = (Button) mRootView.findViewById(R.id.Button_ScanMotors);
         startQrScanner.setOnClickListener(new View.OnClickListener() {
@@ -104,13 +122,21 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
         }
         if(DBG) Log.i(DEBUG_TAG, "Motors.toString(): " + mMotors.toString());
         mMotors.initAdapter(mContext, R.layout.list_motoritem, this);
-        for(int i = 0 ; i < 16; ++i) {
-            mMotors.addMotor(i, 0);
+        for(int i = mMotors.size() ; i < 16; ++i) {
+            mMotors.addMotor(i, 0, 0, 0);
         }
     }
 
-    private MotorItemAdapter getAdapter() {
-        return mMotors.getAdapter();
+    public void setAdapter(Motors.MotorAdapter mode) {
+        try{
+            mLVMotors.setAdapter(mMotors.getAdapter(mode));
+        }catch (NullPointerException e){
+            if(DBG) Log.i(DEBUG_TAG, e.toString() + "ListView " + mLVMotors.toString() + "not valid");
+        }
+    }
+
+    public void setToolbarTitle(String name){
+        mToolbar.setTitle(name);
     }
 
     private void setupROS() {
@@ -151,29 +177,75 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
     }
 
     /****************************************** REACT TO EVENTS FROM THE MOTORS ***************************/
+
+    private class MotorCommand{
+        public double   setpoint;
+        public int      id;
+
+        public MotorCommand(int value, int id_){
+            if(DBG) Log.i(DEBUG_TAG, "Create Motor Command with: " + value + "id: " + id);
+            id = new Integer(id_);
+            setpoint = new Integer(value);
+        }
+    }
+
     @Override
-    public void positionChanged(ArrayList<MotorItem> ArrayListMotorItems) {
+    public void positionChanged(MotorItem motorItem) {
         if (!mRosBridge.isConnected()) {
             throw new IllegalArgumentException(DEBUG_TAG + "The RosBridge is not connected");
         }
 
-        StringBuilder msgMotorValue = new StringBuilder();
-        msgMotorValue.append("{\"data\": \"");
-        String delim = "";
-        for (MotorItem mi : ArrayListMotorItems) {
-            msgMotorValue.append(delim + mi.getPosition());
-            delim = ", ";
+        String msgMotorValue = new String();
+        MotorCommand cmnd = new MotorCommand(motorItem.getPosition(), motorItem.getID());
+        ObjectMapper om = new ObjectMapper();
+        try{
+            msgMotorValue = om.writeValueAsString(cmnd);
+        }catch(Exception e){
+            if(DBG) Log.i(DEBUG_TAG, "cannot convert " + cmnd.toString() + "to JSON Object");
         }
-        msgMotorValue.append("\"}");
-        Message motorValues = new Message(msgMotorValue.toString());
-        mRosBridge.publishTopic(mTestTopic, motorValues);
+        Message motorValues = new Message(msgMotorValue);
+        mRosBridge.publishTopic(mpositionT, motorValues);
+    }
+
+    @Override
+    public void velocityChanged(MotorItem motorItem) {
+        if (!mRosBridge.isConnected()) {
+            throw new IllegalArgumentException(DEBUG_TAG + "The RosBridge is not connected");
+        }
+
+        String msgMotorValue = new String();
+        MotorCommand cmnd = new MotorCommand(motorItem.getVelocity(), motorItem.getID());
+        ObjectMapper om = new ObjectMapper();
+        try{
+            msgMotorValue = om.writeValueAsString(cmnd);
+        }catch(Exception e){
+            if(DBG) Log.i(DEBUG_TAG, "cannot convert " + cmnd.toString() + "to JSON Object");
+        }
+        Message motorValues = new Message(msgMotorValue);
+        mRosBridge.publishTopic(mVeloctiyT, motorValues);
+    }
+
+    @Override
+    public void forceChanged(MotorItem motorItem) {
+        if (!mRosBridge.isConnected()) {
+            throw new IllegalArgumentException(DEBUG_TAG + "The RosBridge is not connected");
+        }
+
+        String msgMotorValue = new String();
+        MotorCommand cmnd = new MotorCommand(motorItem.getForce(), motorItem.getID());
+        ObjectMapper om = new ObjectMapper();
+        try{
+            msgMotorValue = om.writeValueAsString(cmnd);
+        }catch(Exception e){
+            if(DBG) Log.i(DEBUG_TAG, "cannot convert " + cmnd.toString() + "to JSON Object");
+        }
+        Message motorValues = new Message(msgMotorValue);
+        mRosBridge.publishTopic(mForceT, motorValues);
     }
 
     private void setupTopics(){
         if(!m1Topic){
             m1Topic = true;
-            if(DBG) Log.i(DEBUG_TAG, "Rosbridge is able to subscribe topics. Subscribe to: " + mTestTopic);
-            mRosBridge.addTopic(mTestTopic);
             mIWir_Slider.wiringDone(mContext);
         }
     }
