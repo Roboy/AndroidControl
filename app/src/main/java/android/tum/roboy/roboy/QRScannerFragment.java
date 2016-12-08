@@ -79,10 +79,10 @@ public class QRScannerFragment extends Fragment implements QRCodeReaderView.OnQR
         mydecoderview.setTorchEnabled(true);
 
         // Use this function to set front camera preview
-        mydecoderview.setFrontCamera();
+//        mydecoderview.setFrontCamera();
 
         // Use this function to set back camera preview
-//        mydecoderview.setBackCamera();
+        mydecoderview.setBackCamera();
     }
 
     // Called when a QR is decoded

@@ -20,8 +20,8 @@ public class MIAdapter_Position extends ArrayAdapter<MotorItem> {
 
     private static final String                 DEBUG_TAG = "\t\tRO_ADAPTER_MOTORITEM";
     private static final boolean                DBG = true;
-    private static final Integer                Offset = 50;
-    private static final Integer                Max = 2 * 50; // -50 to +50
+    private static final Integer                Offset = 10;
+    private static final Integer                Max = 20; // -50 to +50
 
     private ArrayList<MotorItem>                mMotorItems;
     private Context                             mContext;

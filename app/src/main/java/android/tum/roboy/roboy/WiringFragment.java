@@ -97,7 +97,7 @@ public class WiringFragment extends Fragment implements IRosBridgeEvent, IMotorE
         setupMotors();
         mLVMotors = (ListView) mRootView.findViewById(R.id.ListView_Motors);
         setAdapter(Motors.MotorAdapter.POSITION);
-        mLVMotors.setVisibility(View.INVISIBLE);
+//        mLVMotors.setVisibility(View.INVISIBLE);
 
         mToolbar =  (Toolbar) mRootView.findViewById(R.id.MotorSlider_toolbar);
         this.setToolbarTitle("POSITION");

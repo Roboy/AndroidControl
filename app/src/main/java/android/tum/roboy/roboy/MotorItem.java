@@ -5,7 +5,6 @@ import android.util.Log;
 /**
  * Created by sebtut on 12.09.16.
  * Each MotorItem should respectively represent one of many Motors from the Roboy-corpus
- * Used together
  */
 public class MotorItem {
     private int mID;

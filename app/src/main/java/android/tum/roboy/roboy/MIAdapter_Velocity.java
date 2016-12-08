@@ -20,8 +20,8 @@ public class MIAdapter_Velocity extends ArrayAdapter<MotorItem> {
 
     private static final String                 DEBUG_TAG = "\t\tRO_ADAPTER_MOTORITEM";
     private static final boolean                DBG = true;
-    private static final Integer                Offset = 10;
-    private static final Integer                Max = 20; // -10 to +10
+    private static final Integer                Offset = 1;
+    private static final Integer                Max = 2; // -10 to +10
 
     private ArrayList<MotorItem>                mMotorItems;
     private Context                             mContext;
@@ -74,7 +74,7 @@ public class MIAdapter_Velocity extends ArrayAdapter<MotorItem> {
                                     + "\t\t old Force:" + velocity
                                     + "\t\t from motor: " + id);
                             motorPosition.setText(velocity_new.toString());
-                            motorItem.setmForce(velocity_new);
+                            motorItem.setVelocity(velocity_new);
                             try {
                                 mIMotorEvent.velocityChanged(motorItem);
                             } catch (Exception e) {
