@@ -2,7 +2,7 @@
 
 ########## SETUP 
 
-The projekt uses Android Studio (https://developer.android.com/studio/index.html) and the provided SDK tools as IDE. Additionally the Dependency Injection framework (https://google.github.io/dagger/) has been used to resolve dependencies for this project. 
+The project uses Android Studio (https://developer.android.com/studio/index.html) and the provided SDK tools as IDE. Additionally the Dependency Injection framework (https://google.github.io/dagger/) has been used to resolve dependencies for this project. 
 
 ########## FUNCTIONALLY
 
